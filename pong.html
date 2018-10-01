@@ -1,0 +1,248 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href='https://fonts.googleapis.com/css?family=Rationale' rel='stylesheet'>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+    width: 100%;
+}
+body
+{
+    overflow-x: hidden;
+    overflow-y: hidden;
+    margin:0px 0px 0px 0px;
+}
+</style>
+</head>
+<body onload="startGame()">
+</body>
+<script>
+var player;	
+var ball;
+var cpu;
+var canvasWidth=window.innerWidth;
+var canvasHieght=window.innerHeight;
+var keys=[];
+var time=0;
+var flag=0;
+function startGame() {
+    myGameArea.start();
+    player = new Player(canvasWidth/60,canvasWidth/20, "black",0,canvasHieght/2); 
+    ball   = new Ball(canvasWidth/2,canvasHieght/2,20);
+    cpu    = new Cpu(canvasWidth/60,canvasWidth/20, "black",(canvasWidth-canvasWidth/60),canvasHieght/2); 
+}
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateCanvas,6);
+        //document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+       // this.interval = setInterval(updateCanvas, 20);
+    },
+	clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        },
+}
+function Player(width,height,color,x,y)
+{
+	this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y; 
+    this.speed=25;
+    this.score=0;
+    ctx = myGameArea.context;
+    ctx.fillStyle = color;
+    ctx.fillRect(this.x,this.y,this.width,this.height);
+    ctx.fillRect(this.x,this.y-5,this.width/2,this.height/2);
+    this.move=function()
+    {
+    	if(this.y<0)
+    		this.y=0;
+    	else if(this.y>canvasHieght)
+    		this.y=canvasHieght;
+
+    	ctx = myGameArea.context;
+    	ctx.fillStyle = color;
+        ctx.fillRect(this.x,this.y,this.width,this.height);
+    }
+    this.pause=function(){
+
+    	if(this.y<0)
+    		this.y=0;
+    	else if(this.y>canvasHieght-this.height)
+    		this.y=canvasHieght-this.height;
+        ctx = myGameArea.context;
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x,this.y,this.width,this.height);
+        }
+}
+function Cpu(width,height,color,x,y)
+{
+	this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y; 
+    this.speed=5;
+    this.score=0;
+    ctx = myGameArea.context;
+    ctx.fillStyle = color;
+    ctx.fillRect(this.x,this.y,this.width,this.height);
+    ctx.fillRect(this.x,this.y-5,this.width/2,this.height/2);
+    this.move=function()
+    {
+      if(ball.x>canvasWidth/2)
+    {	
+    	if(this.y<0)
+    		this.y=0;
+    	else if(this.y>canvasHieght)
+    		this.y=canvasHieght;
+    	else if(ball.y-this.y-20>0)
+    		this.y+=this.speed;
+    	else if(ball.y-this.y-20<0)
+    		this.y-=this.speed;
+    	ctx = myGameArea.context;
+    	ctx.fillStyle = color;
+        ctx.fillRect(this.x,this.y,this.width,this.height);
+    }
+    }
+    this.pause=function(){
+
+    	if(this.y<0)
+    		this.y=0;
+    	else if(this.y>canvasHieght-this.height)
+    		this.y=canvasHieght-this.height;
+        ctx = myGameArea.context;
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x,this.y,this.width,this.height);
+        }
+}
+function Ball(x,y,radius)
+{
+	this.x=x;
+	this.y=y;
+	this.speedx=3;
+	this.speedy=3;
+	this.radius=radius;
+	var cpu_flag=0
+	var player_flag=0;
+	ctx = myGameArea.context;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.radius,0, 2 * Math.PI);
+    ctx.stroke();
+    this.move=function()
+    {
+    	if(this.x<0 || this.x>canvasWidth || (this.x-this.radius<player.x+player.width && this.y>player.y && this.y<player.y+player.height)||(this.x+ball.radius>cpu.x && this.y>cpu.y && this.y<cpu.y+cpu.height))
+    	{
+    		this.speedx=-this.speedx;
+    	}
+    	if(this.y>canvasHieght || this.y<0)
+    	{
+    		this.speedy=-this.speedy;
+    	}
+    	 if(this.x-this.radius<player.x+player.width && !(this.y>player.y && this.y<player.y+player.height) && cpu_flag==0)
+    	{ 
+
+    		cpu.score++;
+    		cpu_flag=1;
+    	}
+    	 if(this.x+this.radius>cpu.x+cpu.width && !(this.y>cpu.y && this.y<cpu.y+cpu.height) && player_flag==0)
+    	{ 
+    		player.score++;
+    		player_flag=1;
+    	}
+    	 if(this.x>canvasWidth/2)
+    	 {
+    		cpu_flag=0;
+    	 }
+    	 if(this.x<canvasWidth/2)
+    	 {
+    		player_flag=0;
+    	 }
+    	 if(time>60 && flag==0)
+    	 {
+    	 	this.speedy=5;
+    	 	this.speedx=5;
+    	 	player.speed=32;
+    	 	flag=1;
+    	 }
+    	this.x+=this.speedx;
+    	this.y+=this.speedy;
+
+    ctx = myGameArea.context;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.radius,0, 2 * Math.PI);
+    ctx.stroke();
+    }
+	this.pause=function(){
+        ctx = myGameArea.context;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.radius,0, 2 * Math.PI);
+        ctx.stroke();
+        }
+}
+function moveplayer(e)
+{
+	 keys[e.keyCode]=true;
+	 if(keys[87])
+	 {
+	 	player.y-=player.speed;
+	 }
+	 else if(keys[83])
+	 {
+	 	player.y+=player.speed;
+	 }
+}
+function keyrelease(e)
+{
+keys[e.keyCode] = false;
+} 
+/*(function() {
+    document.onmousemove = handleMouseMove;
+    function handleMouseMove(event) {
+
+        event = event || window.event; 
+        var x=event.pageX;
+        var y=event.pageY;
+        if(y>player.y && y<player.y+player.height)// for mouse control
+        {
+
+ 			if(y>player.y+(player.height/2))
+ 				player.y+=player.speed;
+ 			else
+ 				player.y-=player.speed;
+        }
+        if(y>player.y+(player.height/2))
+        	player.y+=player.speed;
+        else
+        	player.y-=player.speed;
+    }
+})();*/
+var myVar = setInterval(myTimer, 1000);
+
+function myTimer() {
+	time++;
+   }
+function updateCanvas()
+{
+  myGameArea.clear();
+  ctx = myGameArea.context;
+  ctx.font = "30px Rationale";
+  ctx.fillStyle="black";
+  ctx.fillText("W and S for controll ",canvasWidth-250,40);
+  ctx.fillText("Player "+player.score,(canvasWidth/2)-100,40);
+  ctx.fillText("CPU "+cpu.score,(canvasWidth/2)+60,40);
+  document.addEventListener("keydown",moveplayer);
+  document.addEventListener("keyup",keyrelease);
+  player.pause();
+  ball.move();
+  cpu.move();
+  cpu.pause();
+}
+</script>
